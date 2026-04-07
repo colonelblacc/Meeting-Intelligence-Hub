@@ -1,4 +1,6 @@
-from fastapi import FastAPI, File, UploadFile, Depends, HTTPException
+from fastapi import FastAPI, File, UploadFile, Form, Depends, HTTPException
+from pydantic import BaseModel
+from typing import Dict, Any
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic_settings import BaseSettings
@@ -7,7 +9,7 @@ import sys
 
 # Ensure services module can be found
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-from services.gemini_extractor import configure_gemini, extract_meeting_intelligence
+from services.gemini_extractor import configure_gemini, extract_meeting_intelligence, chat_intelligence
 from services.pii_scrubber import pii_scrubber
 from services.audio_processor import audio_processor
 
@@ -24,8 +26,7 @@ if settings.gemini_api_key:
     configure_gemini(settings.gemini_api_key)
 
 if settings.deepgram_api_key:
-    from deepgram import DeepgramClient
-    audio_processor.deepgram = DeepgramClient(settings.deepgram_api_key)
+    audio_processor.api_key = settings.deepgram_api_key
 
 app = FastAPI(title="Meeting Intelligence Hub")
 
@@ -43,7 +44,10 @@ async def health_check():
     return {"status": "ok", "message": "Meeting Intelligence Hub API is running"}
 
 @app.post("/api/v1/transcripts/upload")
-async def upload_transcript(file: UploadFile = File(...)):
+async def upload_transcript(
+    file: UploadFile = File(...),
+    attendees: str = Form(None)
+):
     valid_text = ["text/plain", "text/vtt"]
     valid_audio = ["audio/mpeg", "audio/wav", "audio/mp3", "audio/mp4", "audio/x-m4a", "video/mp4"]
     
@@ -67,7 +71,7 @@ async def upload_transcript(file: UploadFile = File(...)):
     sanitized_text, vault = pii_scrubber.scrub_and_vault(transcript_text)
     
     # Process with Gemini
-    intelligence = await extract_meeting_intelligence(sanitized_text)
+    intelligence = await extract_meeting_intelligence(sanitized_text, attendees)
     
     # Re-hydrate the results with original sensitive data
     rehydrated_intelligence = pii_scrubber.rehydrate(intelligence, vault)
@@ -78,6 +82,14 @@ async def upload_transcript(file: UploadFile = File(...)):
         "data": rehydrated_intelligence,
         "message": f"File {file.filename} processed successfully."
     }
+
+class ChatRequest(BaseModel):
+    message: str
+    context: Dict[str, Any]
+
+@app.post("/api/v1/chat")
+async def chat_endpoint(req: ChatRequest):
+    return await chat_intelligence(req.message, req.context)
 
 # Mount static files (frontend)
 frontend_path = os.path.join(os.path.dirname(__file__), "..", "frontend")
