@@ -9,9 +9,11 @@ import sys
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from services.gemini_extractor import configure_gemini, extract_meeting_intelligence
 from services.pii_scrubber import pii_scrubber
+from services.audio_processor import audio_processor
 
 class Settings(BaseSettings):
     gemini_api_key: str = ""
+    deepgram_api_key: str = ""
     database_url: str = "postgresql://user:pass@localhost:5432/meetings_db"
     
     class Config:
@@ -20,6 +22,10 @@ class Settings(BaseSettings):
 settings = Settings()
 if settings.gemini_api_key:
     configure_gemini(settings.gemini_api_key)
+
+if settings.deepgram_api_key:
+    from deepgram import DeepgramClient
+    audio_processor.deepgram = DeepgramClient(settings.deepgram_api_key)
 
 app = FastAPI(title="Meeting Intelligence Hub")
 
@@ -38,11 +44,24 @@ async def health_check():
 
 @app.post("/api/v1/transcripts/upload")
 async def upload_transcript(file: UploadFile = File(...)):
-    if file.content_type not in ["text/plain", "text/vtt"] and not file.filename.endswith(('.txt', '.vtt')):
-        raise HTTPException(status_code=400, detail="Only .txt or .vtt allowed")
+    valid_text = ["text/plain", "text/vtt"]
+    valid_audio = ["audio/mpeg", "audio/wav", "audio/mp3", "audio/mp4", "audio/x-m4a", "video/mp4"]
+    
+    is_text = file.content_type in valid_text or file.filename.endswith(('.txt', '.vtt'))
+    is_audio = file.content_type in valid_audio or file.filename.endswith(('.mp3', '.wav', '.mp4', '.m4a'))
+    
+    if not (is_text or is_audio):
+        raise HTTPException(status_code=400, detail="Only .txt, .vtt, .mp3, .wav, .m4a, or .mp4 allowed")
         
     content = await file.read()
-    transcript_text = content.decode('utf-8')
+    
+    if is_audio:
+        try:
+            transcript_text = await audio_processor.transcribe_audio_bytes(content, file.content_type)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Audio processing failed: {str(e)}")
+    else:
+        transcript_text = content.decode('utf-8')
     
     # PII Scrubbing (Vaulting & Tokenization)
     sanitized_text, vault = pii_scrubber.scrub_and_vault(transcript_text)

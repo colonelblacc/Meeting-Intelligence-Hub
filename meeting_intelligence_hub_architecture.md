@@ -396,6 +396,7 @@ class QueryEngine:
 - **Validation:** Pydantic (Python) or Zod (TypeScript)
 
 #### AI/ML Services
+- **Audio STT & Diarization:** Deepgram API (Nova-2 model, Option A)
 - **LLM:** Anthropic Claude API (Claude Sonnet 4)
 - **Embeddings:** 
   - Option 1: OpenAI text-embedding-3-small
@@ -435,7 +436,33 @@ For maximum cost efficiency:
 
 ## 6. Data Flow & Processing Pipeline
 
-### 6.1 Transcript Upload Flow
+### 6.1 Audio Upload Flow (Deepgram Pipeline)
+
+```
+┌────────────────────────┐
+│ 1. User Uploads Audio  │
+│    (.mp3, .wav, .mp4)  │
+└──────┬─────────────────┘
+       │
+       ▼
+┌────────────────────────┐
+│ 2. Audio Pipeline      │
+│  a. Ingestion/Validate │
+│  b. Deepgram API (STT) │
+│  c. Diarization (Who)  │
+└──────┬─────────────────┘
+       │
+       ▼
+┌────────────────────────┐
+│ 3. Generated Transcript│
+│    (Auto-creates Text) │
+└──────┬─────────────────┘
+       │
+       ▼
+      (Goes to Step 6.2)
+```
+
+### 6.2 Transcript Upload Flow
 
 ```
 ┌──────────────┐

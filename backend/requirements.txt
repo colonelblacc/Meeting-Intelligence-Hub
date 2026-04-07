@@ -7,3 +7,4 @@ pydantic-settings
 presidio-analyzer
 presidio-anonymizer
 spacy
+deepgram-sdk
