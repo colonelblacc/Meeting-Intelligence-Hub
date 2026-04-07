@@ -1302,6 +1302,15 @@ async def query_endpoint(request: Request, query: QueryRequest):
     pass
 ```
 
+### 11.4 Data Privacy & PII Scrubbing Pipeline
+To ensure enterprise compliance (SOC 2, GDPR) and prevent sensitive data leakage to third-party LLMs, the system implements a local sanitization layer.
+
+* **Detection Engine:** Utilizes Microsoft Presidio for local Named Entity Recognition (NER) combined with regex patterns to identify names, financials, and proprietary terms.
+* **Tokenization & Re-hydration:** 
+  1. Sensitive entities are replaced with deterministic tokens (e.g., `<PERSON_1>`) before API transmission.
+  2. A temporary mapping is stored securely in the local context (or Redis cache).
+  3. Upon receiving the LLM's response, the backend "re-hydrates" the payload by swapping the tokens back to their original values before serving the data to the frontend.
+
 ---
 
 ## 12. Deployment Architecture

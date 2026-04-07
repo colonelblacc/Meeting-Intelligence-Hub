@@ -8,6 +8,7 @@ import sys
 # Ensure services module can be found
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from services.gemini_extractor import configure_gemini, extract_meeting_intelligence
+from services.pii_scrubber import pii_scrubber
 
 class Settings(BaseSettings):
     gemini_api_key: str = ""
@@ -43,13 +44,19 @@ async def upload_transcript(file: UploadFile = File(...)):
     content = await file.read()
     transcript_text = content.decode('utf-8')
     
+    # PII Scrubbing (Vaulting & Tokenization)
+    sanitized_text, vault = pii_scrubber.scrub_and_vault(transcript_text)
+    
     # Process with Gemini
-    intelligence = await extract_meeting_intelligence(transcript_text)
+    intelligence = await extract_meeting_intelligence(sanitized_text)
+    
+    # Re-hydrate the results with original sensitive data
+    rehydrated_intelligence = pii_scrubber.rehydrate(intelligence, vault)
     
     return {
         "transcript_id": "gemini-uuid-123",
         "status": "completed",
-        "data": intelligence,
+        "data": rehydrated_intelligence,
         "message": f"File {file.filename} processed successfully."
     }
 

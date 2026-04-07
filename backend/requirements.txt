@@ -4,3 +4,6 @@ python-multipart
 google-generativeai
 pydantic
 pydantic-settings
+presidio-analyzer
+presidio-anonymizer
+spacy
