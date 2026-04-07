@@ -33,10 +33,15 @@
             </div>
             
             <div class="upload-portal glass-panel" id="dropzone">
+                <div class="attendees-wrapper" style="margin-bottom: 2rem; text-align: left;">
+                    <label for="attendees-input" style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary); font-size: 0.9rem; font-weight: 500;">Meeting Attendees (Optional):</label>
+                    <input type="text" id="attendees-input" placeholder="e.g. Sid Sijbrandij, Cormac, Alita, Samia" style="width: 100%; padding: 0.75rem; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; background: rgba(0,0,0,0.2); color: white; font-family: inherit;">
+                </div>
+                
                 <i data-lucide="upload-cloud" class="upload-icon"></i>
-                <h3>Drag & drop transcript here</h3>
-                <p>Supports .TXT and .VTT up to 50MB</p>
-                <input type="file" id="file-input" accept=".txt,.vtt" hidden>
+                <h3>Drag & drop media or transcript here</h3>
+                <p>Supports .MP3, .WAV, .MP4, .TXT, .VTT</p>
+                <input type="file" id="file-input" accept="audio/*,video/mp4,.txt,.vtt" hidden>
                 <button class="btn-primary" onclick="document.getElementById('file-input').click()">Select File</button>
                 
                 <div class="progress-container hidden" id="upload-progress">
