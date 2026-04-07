@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meeting Intelligence Hub</title>
+    <meta name="description" content="Extract insights, decisions, and action items from your meeting transcripts using AI">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="index.css">
+    <link href="https://unpkg.com/lucide@latest/css/lucide.css" rel="stylesheet">
+</head>
+<body>
+    <div class="glass-bg"></div>
+    <div class="glass-bg-accent"></div>
+
+    <nav class="navbar glass-panel">
+        <div class="logo">
+            <i data-lucide="brain-circuit"></i>
+            <h1>Intelligence Hub</h1>
+        </div>
+        <div class="nav-links">
+            <a href="#" class="active" id="nav-dashboard">Dashboard</a>
+            <a href="#" id="nav-chat">AI Chat</a>
+        </div>
+    </nav>
+
+    <main class="container">
+        <!-- Hero Section & Upload -->
+        <section class="upload-section animate-fade-in" id="upload-view">
+            <div class="hero-content">
+                <h2>Transform Meetings into <span class="gradient-text">Actionable Intelligence</span></h2>
+                <p>Upload a transcript to automatically extract decisions and assign action items.</p>
+            </div>
+            
+            <div class="upload-portal glass-panel" id="dropzone">
+                <i data-lucide="upload-cloud" class="upload-icon"></i>
+                <h3>Drag & drop transcript here</h3>
+                <p>Supports .TXT and .VTT up to 50MB</p>
+                <input type="file" id="file-input" accept=".txt,.vtt" hidden>
+                <button class="btn-primary" onclick="document.getElementById('file-input').click()">Select File</button>
+                
+                <div class="progress-container hidden" id="upload-progress">
+                    <div class="progress-info">
+                        <span id="progress-text">Analyzing meeting content...</span>
+                        <span id="progress-value">45%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-fill" style="width: 45%;"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Dashboard View -->
+        <section class="dashboard-view hidden layout-fade" id="dashboard-view">
+            <div class="dashboard-header group">
+                <h3 class="glass-panel stat-card">
+                    <i data-lucide="check-circle"></i>
+                    <span class="stat-num" id="decisions-count">0</span>
+                    <span class="stat-label">Decisions</span>
+                </h3>
+                <h3 class="glass-panel stat-card">
+                    <i data-lucide="list-todo"></i>
+                    <span class="stat-num" id="actions-count">0</span>
+                    <span class="stat-label">Action Items</span>
+                </h3>
+            </div>
+
+            <div class="dashboard-grid">
+                <!-- Decisions Tab -->
+                <div class="glass-panel list-panel">
+                    <div class="panel-header">
+                        <h4><i data-lucide="gavel"></i> Key Decisions</h4>
+                    </div>
+                    <ul class="item-list" id="decisions-list">
+                        <!-- Populated by JS -->
+                        <div class="empty-state">No decisions extracted yet.</div>
+                    </ul>
+                </div>
+
+                <!-- Action Items Tab -->
+                <div class="glass-panel list-panel">
+                    <div class="panel-header">
+                        <h4><i data-lucide="clipboard-list"></i> Action Items</h4>
+                    </div>
+                    <ul class="item-list" id="actions-list">
+                        <!-- Populated by JS -->
+                        <div class="empty-state">No action items extracted yet.</div>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Chat View -->
+        <section class="chat-view hidden layout-fade" id="chat-view">
+            <div class="chat-container glass-panel">
+                <div class="chat-header">
+                    <h4><i data-lucide="messages-square"></i> Query Meeting History</h4>
+                    <p>Ask anything about past discussions.</p>
+                </div>
+                
+                <div class="chat-messages" id="chat-messages">
+                    <div class="message assistant">
+                        <div class="avatar"><i data-lucide="bot"></i></div>
+                        <div class="message-content">Hello! Ask me about any decisions, tasks, or topics discussed in your meetings.</div>
+                    </div>
+                </div>
+                
+                <form class="chat-input-form" id="chat-form">
+                    <input type="text" id="chat-input" placeholder="e.g. Why did we delay the API launch?" required>
+                    <button type="submit" class="btn-icon"><i data-lucide="send"></i></button>
+                </form>
+            </div>
+        </section>
+    </main>
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="app.js"></script>
+</body>
+</html>
