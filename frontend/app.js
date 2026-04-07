@@ -19,6 +19,7 @@ const progressValue = document.getElementById('progress-value');
 // Mock Data
 let decisions = [];
 let actionItems = [];
+let currentContext = {};
 
 // Navigation logic
 function switchView(viewId) {
@@ -99,6 +100,11 @@ async function uploadFile(file) {
     const formData = new FormData();
     formData.append('file', file);
     
+    const attendeesVal = document.getElementById('attendees-input').value.trim();
+    if (attendeesVal) {
+        formData.append('attendees', attendeesVal);
+    }
+    
     try {
         const response = await fetch('/api/v1/transcripts/upload', {
             method: 'POST',
@@ -114,6 +120,7 @@ async function uploadFile(file) {
             
             setTimeout(() => {
                 const data = result.data || { decisions: [], actionItems: [] };
+                currentContext = data;
                 decisions = data.decisions || [];
                 actionItems = data.actionItems || [];
                 
@@ -121,7 +128,7 @@ async function uploadFile(file) {
                 switchView('dashboard-view');
                 
                 // Reset upload view
-                dropzone.querySelector('h3').innerText = 'Drag & drop transcript here';
+                dropzone.querySelector('h3').innerText = 'Drag & drop media or transcript here';
                 dropzone.querySelector('p').classList.remove('hidden');
                 dropzone.querySelector('.btn-primary').classList.remove('hidden');
                 uploadProgress.classList.add('hidden');
@@ -130,9 +137,9 @@ async function uploadFile(file) {
             throw new Error(result.detail || 'Upload failed');
         }
     } catch (e) {
-        alert("Failed to process transcript: " + e.message);
+        alert("Failed to process file: " + e.message);
         // Reset UI
-        dropzone.querySelector('h3').innerText = 'Drag & drop transcript here';
+        dropzone.querySelector('h3').innerText = 'Drag & drop media or transcript here';
         dropzone.querySelector('p').classList.remove('hidden');
         dropzone.querySelector('.btn-primary').classList.remove('hidden');
         uploadProgress.classList.add('hidden');
@@ -171,7 +178,7 @@ const chatForm = document.getElementById('chat-form');
 const chatInput = document.getElementById('chat-input');
 const chatMessages = document.getElementById('chat-messages');
 
-chatForm.addEventListener('submit', (e) => {
+chatForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const msg = chatInput.value.trim();
     if(!msg) return;
@@ -180,10 +187,18 @@ chatForm.addEventListener('submit', (e) => {
     appendMessage(msg, 'user');
     chatInput.value = '';
     
-    // Mock response
-    setTimeout(() => {
-        appendMessage("Based on the recent meeting, the API launch was delayed because the security audit revealed vulnerabilities that must be fixed first.", 'assistant');
-    }, 1000);
+    // Fetch response
+    try {
+        const response = await fetch('/api/v1/chat', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ message: msg, context: currentContext })
+        });
+        const result = await response.json();
+        appendMessage(result.reply || "No response received.", 'assistant');
+    } catch (err) {
+        appendMessage("Sorry, I couldn't reach the backend.", 'assistant');
+    }
 });
 
 function appendMessage(text, role) {
