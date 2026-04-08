@@ -10,7 +10,7 @@ async def extract_meeting_intelligence(transcript: str, attendees: str = None):
     
     attendees_context = ""
     if attendees:
-        attendees_context = f"\n\n    KNOWN ATTENDEES IN THIS MEETING: {attendees}\n    You should strongly prefer assigning 'Speaker 0', 'Speaker 1', etc., to these specific names using process of elimination from the conversation."
+        attendees_context = f"\n\n    KNOWN ATTENDEES IN THIS MEETING: {attendees}\n    CRITICAL MAPPING OBJECTIVE: Your goal is to completely eliminate generic 'Speaker X' tags by mapping them definitively to these known attendees. Use context and process of elimination to figure out who is who. Do not map the same Name to multiple distinct Speakers. Make your absolute best educated guess so that every speaker gets their real name."
         
     prompt = f"""
     Analyze this meeting transcript and extract all DECISIONS and ACTION ITEMS.{attendees_context}
@@ -22,9 +22,8 @@ async def extract_meeting_intelligence(transcript: str, attendees: str = None):
     You MUST output the exact token (e.g. "<TOKEN_PERSON_1>") in your JSON whenever referencing a person. Do not remove the brackets.
 
     STEP 1: Infer Speaker Identities. Identify who "Speaker 0", "Speaker 1", etc., actually are using context clues (e.g. if Speaker 1 says "What do you think, <TOKEN_PERSON_2>?" and Speaker 0 answers, Speaker 0 is likely <TOKEN_PERSON_2>). 
-    Map every Speaker tag to either their exact <TOKEN_PERSON_X> or their literal real name if it wasn't scrubbed. 
-    IF you cannot definitively infer their real name or exact <TOKEN>, you MUST map them to their original generic label (e.g. "Speaker 0"). DO NOT invent placeholder titles like "Meeting Lead", "Participant", or "Host".
-
+    Map every Speaker tag to their exact <TOKEN_PERSON_X> or their literal real name if it wasn't scrubbed. Try your hardest to map every Speaker to a known attendee!
+ 
     Format the output exactly as the following JSON structure:
     {{
       "speaker_mapping": {{
@@ -87,9 +86,13 @@ async def extract_meeting_intelligence(transcript: str, attendees: str = None):
 async def chat_intelligence(message: str, context: dict):
     """Uses Gemini to answer user questions based on the extracted meeting context"""
     prompt = f"""
-    You are an AI assistant for a Meeting Intelligence Hub. Answer the user's question about the recent meeting.
-    Use the following extracted meeting data (Decisions, Action Items, and Speaker Mappings) to inform your response.
-    Be concise, helpful, and speak directly to the user. Do not explain the JSON structure.
+    You are a professional AI assistant for a Meeting Intelligence Hub. Answer the user's question about the recent meeting smoothly and elegantly.
+    Use the following extracted meeting data (Decisions, Action Items) to inform your response.
+    
+    CRITICAL FORMATTING RULES:
+    1. The frontend renders your output using HTML. You MUST use valid HTML tags (like <p>, <ul>, <li>, <strong>, <br>) to structure your response.
+    2. DO NOT use Markdown formatting (like **, *, or #). 
+    3. Synthesize the information in a user-friendly, conversational way. Do not just dump raw JSON data or robotic lists.
 
     MEETING DATA:
     {json.dumps(context, indent=2)}

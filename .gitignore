@@ -7,3 +7,4 @@ chroma_data/
 postgres_data/
 *.db
 .DS_Store
+*.mp3
