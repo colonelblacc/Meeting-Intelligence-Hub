@@ -13,8 +13,19 @@ except OSError:
 
 class PIIScrubbingService:
     def __init__(self):
-        # Initialize Presidio Analyzer and Anonymizer
-        self.analyzer = AnalyzerEngine()
+        from presidio_analyzer.nlp_engine import NlpEngineProvider
+        # Initialize Presidio Analyzer and Anonymizer to use the SMALL model specifically
+        configuration = {
+            "nlp_engine_name": "spacy",
+            "models": [{"lang_code": "en", "model_name": "en_core_web_sm"}],
+        }
+        provider = NlpEngineProvider(nlp_configuration=configuration)
+        nlp_engine = provider.create_engine()
+        
+        self.analyzer = AnalyzerEngine(
+            nlp_engine=nlp_engine, 
+            supported_languages=["en"]
+        )
         self.anonymizer = AnonymizerEngine()
         
     def scrub_and_vault(self, text: str) -> tuple[str, dict]:
