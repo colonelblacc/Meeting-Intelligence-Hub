@@ -58,6 +58,6 @@ You will need API keys from **Deepgram** and **Google Gemini (Google AI Studio)*
 ##  Live Demo
 
 You can interact with the live deployed intelligence hub here:
-**[View Live Application]((Replace this with your Render.onrender.com link))**
+**[View Live Application]()**
 
 *(Note: Hosted on a free Render instance, the server may take up to 60 seconds to wake from a cold start).*
